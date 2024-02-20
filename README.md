@@ -22,10 +22,7 @@ npm install glpk.js
 In the browser:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/lp-model"></script>
-<!-- optionally include one of the solvers -->
-<script src="https://cdn.jsdelivr.net/npm/highs"></script>
-<script src="https://cdn.jsdelivr.net/npm/glpk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lp-model@latest/dist/lp-model.min.js"></script>
 ```
 
 ## Usage
