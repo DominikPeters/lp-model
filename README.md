@@ -46,8 +46,8 @@ async function main() {
 main();
 ```
 
-<details>
-  <summary>Setup in the browser for high-js</summary>
+Setup in the browser for high-js:
+
 ```html
 <script src="https://cdn.jsdelivr.net/npm/lp-model@latest/dist/lp-model.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highs/build/highs.js"></script>
@@ -61,11 +61,8 @@ main();
     main();
 </script>
 ```
-</details>
 
-<details>
-    <summary>Setup in the browser for glpk.js</summary>
-glpk.js needs to be loaded as a module, so you need to use the `type="module"` attribute on the `script` tag.
+Setup in the browser for glpk.js (needs to be loaded from a module):
 ```html
 <script type="module">
     import { Model } from "https://cdn.jsdelivr.net/npm/lp-model@latest/dist/lp-model.es.min.js";
@@ -80,7 +77,6 @@ glpk.js needs to be loaded as a module, so you need to use the `type="module"` a
     main();
 </script>
 ```
-</details>
 
 ### Example model
 
