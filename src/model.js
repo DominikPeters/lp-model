@@ -239,7 +239,7 @@ export class Model {
      * @see {@link https://web.mit.edu/lpsolve/doc/CPLEX-format.htm}
      */
     toLPFormat() {
-        toLPFormat(this);
+        return toLPFormat(this);
     }
 
     /**
@@ -289,9 +289,9 @@ export class Model {
      * @param {Object} solver - The solver instance to use for solving the model, either HiGHS.js or glpk.js.
      * @param {Object} [options={}] - Options to pass to the solver's solve method (refer to their respective documentation: https://ergo-code.github.io/HiGHS/dev/options/definitions/, https://www.npmjs.com/package/glpk.js).
      */
-    solve(solver, options = {}) {
+    async solve(solver, options = {}) {
         if (Object.hasOwn(solver, 'GLP_OPT')) {
-            this.solution = solver.solve(this.toGLPKFormat(), options);
+            this.solution = await solver.solve(this.toGLPKFormat(), options);
             this.readGLPKSolution(this.solution);
         } else if (Object.hasOwn(solver, '_Highs_run')) {
             this.solution = solver.solve(this.toLPFormat(), options);
