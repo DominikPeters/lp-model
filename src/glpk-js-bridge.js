@@ -28,6 +28,14 @@ glpk_consts.GLP_NOFEAS = 4;    /* no feasible solution exists */
 glpk_consts.GLP_OPT = 5;	    /* solution is optimal */
 glpk_consts.GLP_UNBND = 6;     /* solution is unbounded */
 
+const solutionNames = {
+    1: "Undefined",
+    2: "Feasible",
+    3: "Infeasible",
+    4: "No feasible solution",
+    5: "Optimal",
+    6: "Unbounded"
+};
 
 export function toGLPKFormat(model) {
     const glpkModel = {
@@ -67,7 +75,8 @@ export function toGLPKFormat(model) {
 }
 
 export function readGLPKSolution(model, solution) {
-    model.status = solution.result.status; // Map GLPK status to your model's status
+    model.status = solutionNames[solution.result.status];
+    model.ObjVal = solution.result.z;
 
     // Update variable values
     Object.entries(solution.result.vars).forEach(([varName, varValue]) => {

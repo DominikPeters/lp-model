@@ -125,6 +125,6 @@ model.setObjective(problem.items.map((item, i) => [item.value, included[item.nam
 // maximize sum of values of included items
 
 await model.solve(highs);
-console.log(`Objective value: ${model.objVal}`);
-console.log(`Included items: ${itemNames.filter(name => included[name].value > 0.5)}`);
+console.log(`Objective value: ${model.ObjVal}`);
+console.log(`Included items: ${itemNames.filter(name => included[name].value > 0.5)}`); // A,B,D
 ```

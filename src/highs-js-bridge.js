@@ -25,4 +25,9 @@ export function readHighsSolution(model, solution) {
             console.warn(`Row ${row.Name} from the solution does not correspond to any model constraint.`);
         }
     });
+
+    // Update objective value
+    if (solution.ObjectiveValue) {
+        model.ObjVal = solution.ObjectiveValue;
+    }
 }
