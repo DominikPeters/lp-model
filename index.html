@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>lp-model package demo page</title>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+</head>
+
+<body>
+    <main>
+        <h1>lp-model</h1>
+        <p>This is a demo page for <code>lp-model</code>, a lightweight JS package for specifying LPs and ILPs using a
+            convenient syntax, used together with the <code>highs-js</code> and <code>glpk.js</code> solvers using
+            WebAssembly.
+            <a href="https://github.com/DominikPeters/lp-model">GitHub</a> | <a
+                href="https://www.npmjs.com/package/lp-model">npm</a>.
+        </p>
+        <pre id="output"></pre>
+    </main>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/lp-model@0.2.1/dist/lp-model.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/highs/build/highs.js"></script>
+    <script type="module">
+        import { Model } from "https://cdn.jsdelivr.net/npm/lp-model@0.2.1/dist/lp-model.es.min.js";
+        import GLPK from "https://cdn.jsdelivr.net/npm/glpk.js";
+
+        async function main() {
+            const pre = document.getElementById("output");
+
+            const m = new Model();
+            window.m = m;
+
+            const x = m.addVar({ lb: 0, vtype: "BINARY" });
+            const y = m.addVar({ lb: 0, name: "y" });
+
+            m.setObjective([[4, x], [5, y]], "MAXIMIZE");
+            m.addConstr([x, [2, y], 3], "<=", 8);
+            m.addConstr([[3, x], [4, y]], ">=", [12, [-1, x]]);
+
+            pre.textContent = m.toLPFormat();
+
+            const highs = await Module();
+            await m.solve(highs);
+            pre.textContent += `\n\nHiGHS Solution:\n x = ${x.value}\n y = ${y.value}`;
+
+            const glpk = await GLPK();
+            await m.solve(glpk);
+            pre.textContent += `\n\nGLPK Solution:\n x = ${x.value}\n y = ${y.value}`;
+        }
+
+        window.main = main;
+        main();
+    </script>
+</body>
+
+</html>

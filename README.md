@@ -108,7 +108,7 @@ const problem = {
 const itemNames = problem.items.map(item => item.name);
 
 const included = model.addVars(itemNames, { vtype: "BINARY" });
-// included : dict with keys "A", "B", "C", "D", each representing a binary variable
+// included[A], included[B], included[C], included[D] are binary variables
 
 model.addConstr(problem.items.map((item, i) => [item.weight, included[item.name]]), "<=", problem.capacity);
 // sum of weights of included items <= capacity
