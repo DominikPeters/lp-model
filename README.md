@@ -6,7 +6,7 @@
 
 JavaScript package for modelling (Integer) Linear Programs
 
-This is a lightweight JS package for specifying LPs and ILPs using a convenient syntax. The constructed model can be exported to the `.lp` [CPLEX LP format](https://web.mit.edu/lpsolve/doc/CPLEX-format.htm), and solved using the [highs-js](https://github.com/lovasoa/highs-js) and [glpk.js](https://github.com/jvail/glpk.js) solvers available as WebAssembly. This can be done both in the browser and in Node.js.
+This is a lightweight JS package for specifying LPs and ILPs using a convenient syntax. The constructed model can be exported to the `.lp` [CPLEX LP format](https://web.mit.edu/lpsolve/doc/CPLEX-format.htm), and solved using the [highs-js](https://github.com/lovasoa/highs-js) and [glpk.js](https://github.com/jvail/glpk.js) solvers available as WebAssembly. This can be done both in the browser ([demo page](https://dominikpeters.github.io/lp-model/)) and in Node.js.
 
 ## Installation
 
@@ -91,6 +91,8 @@ console.log(model.toLPFormat();)
 await model.solve(highs);
 console.log(`x = ${x.value}\n y = ${y.value}`);
 ```
+
+Check out the [demo page](https://dominikpeters.github.io/lp-model/) to see your browser solve this program.
 
 ### Example: knapsack problem
 

@@ -6,16 +6,20 @@
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
 </head>
 
-<body>
+<body style="font-size: 1rem;">
     <main>
         <h1>lp-model</h1>
+        <p>
+            <a href="https://github.com/DominikPeters/lp-model">GitHub</a>
+            |
+            <a href="https://www.npmjs.com/package/lp-model">npm</a>.
+        </p>
         <p>This is a demo page for <code>lp-model</code>, a lightweight JS package for specifying LPs and ILPs using a
             convenient syntax, used together with the <code>highs-js</code> and <code>glpk.js</code> solvers using
             WebAssembly.
-            <a href="https://github.com/DominikPeters/lp-model">GitHub</a> | <a
-                href="https://www.npmjs.com/package/lp-model">npm</a>.
         </p>
         <pre id="output"></pre>
+        <p>If you see an ILP written in the CPLEX LP format, and both the HiGHS solution and the GLPK solution, it worked! <a href="https://github.com/DominikPeters/lp-model/blob/master/index.html">HTML source code</a></p>
     </main>
     <!-- <script src="https://cdn.jsdelivr.net/npm/lp-model@0.2.1/dist/lp-model.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/highs/build/highs.js"></script>
@@ -29,8 +33,8 @@
             const m = new Model();
             window.m = m;
 
-            const x = m.addVar({ lb: 0, vtype: "BINARY" });
-            const y = m.addVar({ lb: 0, name: "y" });
+            const x = m.addVar({ name: "x", lb: 0, vtype: "BINARY" });
+            const y = m.addVar({ name: "y", lb: 0 });
 
             m.setObjective([[4, x], [5, y]], "MAXIMIZE");
             m.addConstr([x, [2, y], 3], "<=", 8);
@@ -40,11 +44,11 @@
 
             const highs = await Module();
             await m.solve(highs);
-            pre.textContent += `\n\nHiGHS Solution:\n x = ${x.value}\n y = ${y.value}`;
+            pre.textContent += `\nHiGHS solution:\n x = ${x.value}\n y = ${y.value}`;
 
             const glpk = await GLPK();
             await m.solve(glpk);
-            pre.textContent += `\n\nGLPK Solution:\n x = ${x.value}\n y = ${y.value}`;
+            pre.textContent += `\n\nGLPK solution:\n x = ${x.value}\n y = ${y.value}`;
         }
 
         window.main = main;
