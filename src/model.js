@@ -62,7 +62,7 @@ export class Model {
     constructor() {
         this.variables = new Map();
         this.constraints = [];
-        this.objective = { expression: null, sense: "MAXIMIZE" };
+        this.objective = { expression: [0], sense: "MAXIMIZE" };
         this.varCount = 0; // Counter for variable naming
     }
 
