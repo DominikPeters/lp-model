@@ -1,5 +1,6 @@
 import { toGLPKFormat, readGLPKSolution } from './glpk-js-bridge.js';
 import { readHighsSolution } from './highs-js-bridge.js';
+import { toLPFormat } from './write-lp-format.js';
 
 /**
  * Represents a variable in a linear programming model.
@@ -146,7 +147,11 @@ export class Model {
         // Combine LHS and negated RHS
         const combinedLhs = lhs.concat(rhs.map(term => {
             if (Array.isArray(term)) {
-                return [-term[0], term[1]]; // Negate the coefficient
+                if (term.length === 2) {
+                    return [-term[0], term[1]]; // Negate the coefficient
+                } else if (term.length === 3) {
+                    return [-term[0], term[1], term[2]]; // Negate the coefficient
+                }
             }
             return -term; // Negate the constant term
         }));
@@ -170,12 +175,34 @@ export class Model {
 
         for (let item of expression) {
             if (Array.isArray(item)) {
-                // Item is a term like [coefficient, variable]
-                const [coeff, varObj] = item;
-                if (combined[varObj.name]) {
-                    combined[varObj.name][0] += coeff;
+                if (item.length === 2) {
+                    // Item is a term like [coefficient, variable]
+                    const [coeff, varObj] = item;
+                    if (!(varObj instanceof Var) || typeof coeff !== 'number') {
+                        throw new Error(`Invalid term: ${item}. Must be [coefficient, variable].`);
+                    }
+                    if (combined[varObj.name]) {
+                        combined[varObj.name][0] += coeff;
+                    } else {
+                        combined[varObj.name] = [coeff, varObj];
+                    }
+                } else if (item.length === 3) {
+                    // Quadratic term like [coefficient, variable1, variable2]
+                    const [coeff, varObj1, varObj2] = item;
+                    if (!(varObj1 instanceof Var) || !(varObj2 instanceof Var) || typeof coeff !== 'number') {
+                        throw new Error(`Invalid quadratic term: ${item}. Must be [coefficient, variable1, variable2].`);
+                    }
+                    let v1 = varObj1.name;
+                    let v2 = varObj2.name;
+                    if (v1 > v2) { [v1, v2] = [v2, v1]; } // Ensure consistent order
+                    const termName = `${v1}_***_${v2}`;
+                    if (combined[termName]) {
+                        combined[termName][0] += coeff;
+                    } else {
+                        combined[termName] = [coeff, this.variables.get(v1), this.variables.get(v2)];
+                    }
                 } else {
-                    combined[varObj.name] = [coeff, varObj];
+                    throw new Error(`Invalid expression item: ${item}. Must be [coefficient, variable] or [coefficient, variable1, variable2].`);
                 }
             } else if (item instanceof Var) {
                 // Item is a variable, treat it as [1, variable]
@@ -197,9 +224,9 @@ export class Model {
         let parsedExpression = [combined['constant']];
         delete combined['constant'];
 
-        for (let varName in combined) {
-            if (combined[varName][0] !== 0) { // Exclude zero-coefficient terms
-                parsedExpression.push(combined[varName]);
+        for (let termName in combined) {
+            if (combined[termName][0] !== 0) { // Exclude zero-coefficient terms
+                parsedExpression.push(combined[termName]);
             }
         }
 
@@ -212,65 +239,20 @@ export class Model {
      * @see {@link https://web.mit.edu/lpsolve/doc/CPLEX-format.htm}
      */
     toLPFormat() {
-        let lpString = "";
+        toLPFormat(this);
+    }
 
-        function expressionToString(expression) {
-            return expression.map(term => {
-                if (Array.isArray(term)) {
-                    return `${term[0]} ${term[1].name}`;
-                } else {
-                    return `${term}`;
-                }
-            }).join(" + ").replace(/\+ -/g, "- ");
+    /**
+     * Checks if the model is quadratic, i.e., if it contains any quadratic terms in the objective function or constraints.
+     * @returns {boolean} True if the model is quadratic, false otherwise.
+     */
+    isQuadratic() {
+        function isQuadraticExpression(expression) {
+            return expression.some(term => Array.isArray(term) && term.length === 3);
         }
 
-        // Objective Function
-        lpString += `${this.objective.sense.toUpperCase() === "MAXIMIZE" ? "Maximize" : "Minimize"}\n`;
-        const objExpression = this.objective.expression[0] === 0 ? this.objective.expression.slice(1) : this.objective.expression; // Remove constant term if zero
-        lpString += `obj: ${expressionToString(objExpression)}\n`;
-
-        // Constraints
-        if (this.constraints.length > 0) {
-            lpString += "Subject To\n";
-            this.constraints.forEach((constr, index) => {
-                lpString += ` c${index + 1}: ${expressionToString(constr.lhs.slice(1))} ${constr.comparison} ${constr.rhs}\n`;
-            });
-        }
-
-        // Bounds
-        let boundsString = "Bounds\n";
-        this.variables.forEach((varObj, varName) => {
-            if (varObj.lb !== 0 || varObj.ub !== "+infinity") {
-                boundsString += `${varObj.lb === "-infinity" ? "-inf" : varObj.lb} <= ${varName} <= ${varObj.ub === "+infinity" ? "+inf" : varObj.ub}\n`;
-            }
-        });
-        lpString += boundsString;
-
-        // Variable Types (General and Binary)
-        let generalVars = [];
-        let binaryVars = [];
-
-        for (const [varName, varObj] of this.variables) {
-            if (varObj.vtype === "INTEGER") {
-                generalVars.push(varName);
-            } else if (varObj.vtype === "BINARY") {
-                binaryVars.push(varName);
-            }
-        }
-
-        let typesString = "";
-        if (generalVars.length > 0) {
-            typesString += "General\n " + generalVars.join(" ") + "\n";
-        }
-        if (binaryVars.length > 0) {
-            typesString += "Binary\n " + binaryVars.join(" ") + "\n";
-        }
-        lpString += typesString;
-
-        // End
-        lpString += "End\n";
-
-        return lpString;
+        return isQuadraticExpression(this.objective.expression)
+            || this.constraints.some(constr => isQuadraticExpression(constr.lhs));
     }
 
     /**
@@ -287,6 +269,9 @@ export class Model {
      * @see {@link https://github.com/jvail/glpk.js}
      */
     toGLPKFormat() {
+        if (this.isQuadratic()) {
+            throw new Error("GLPK.js does not support quadratic models.");
+        }
         return toGLPKFormat(this);
     }
 
@@ -302,7 +287,7 @@ export class Model {
      * Solves the model using the provided solver. HiGHS.js or glpk.js can be used. 
      * The solution can be accessed from the variables' `value` properties and the constraints' `primal` and `dual` properties.
      * @param {Object} solver - The solver instance to use for solving the model, either HiGHS.js or glpk.js.
-     * @param {Object} [options={}] - Options to pass to the solver's solve method (refer to their respective documentation).
+     * @param {Object} [options={}] - Options to pass to the solver's solve method (refer to their respective documentation: https://ergo-code.github.io/HiGHS/dev/options/definitions/, https://www.npmjs.com/package/glpk.js).
      */
     solve(solver, options = {}) {
         if (Object.hasOwn(solver, 'GLP_OPT')) {
