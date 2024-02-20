@@ -1,3 +1,5 @@
+import { toGLPKFormat, readGLPKSolution } from './glpk-js-bridge.js';
+import { readHighsSolution } from './highs-js-bridge.js';
 
 /**
  * Represents a variable in a linear programming model.
@@ -207,6 +209,7 @@ export class Model {
     /**
      * Converts the model to CPLEX LP format string.
      * @returns {string} The model represented in LP format.
+     * @see {@link https://web.mit.edu/lpsolve/doc/CPLEX-format.htm}
      */
     toLPFormat() {
         let lpString = "";
@@ -270,47 +273,44 @@ export class Model {
         return lpString;
     }
 
-
-
     /**
-     * Reads and applies the solution from the solver to the model's variables and constraints.
+     * Reads and applies the solution from the HiGHS.js solver to the model's variables and constraints.
      * @param {Object} solution - The solution object returned by the HiGHS solver.
      */
-    readSolution(solution) {
-        this.status = solution.Status;
-
-        if (solution.Status !== 'Optimal' && solution.Status !== 'Feasible') {
-            return; // Do not update variable values if the solution is not optimal or feasible
-        }
-
-        // Update variable values
-        Object.entries(solution.Columns).forEach(([name, column]) => {
-            if (this.variables.has(name)) {
-                const variable = this.variables.get(name);
-                variable.value = column.Primal; // Set variable's value to its primal value from the solution
-            } else {
-                console.warn(`Variable ${name} from the solution was not found in the model.`);
-            }
-        });
-
-        // Update constraint primal and dual values
-        solution.Rows.forEach((row, index) => {
-            if (index < this.constraints.length) {
-                const constraint = this.constraints[index];
-                constraint.primal = row.Primal; // Set constraint's primal value
-                constraint.dual = row.Dual; // Set constraint's dual value
-            } else {
-                console.warn(`Row ${row.Name} from the solution does not correspond to any model constraint.`);
-            }
-        });
+    readHighsSolution(solution) {
+        readHighsSolution(this, solution);
     }
 
     /**
-     * Solves the model using the provided solver.
-     * @param {Object} highs - The HiGHS solver instance to use for solving the model.
+     * Converts the model to the JSON format for use with the glpk.js solver.
+     * @returns {Object} The model represented in the JSON format for glpk.js.
+     * @see {@link https://github.com/jvail/glpk.js}
      */
-    solve(highs) {
-        this.solution = highs.solve(this.toLPFormat());
-        this.readSolution(this.solution);
+    toGLPKFormat() {
+        return toGLPKFormat(this);
+    }
+
+    /**
+     * Reads and applies the solution from the glpk.js solver to the model's variables and constraints.
+     * @param {Object} solution - The solution object returned by the glpk.js solver.
+     */
+    readGLPKSolution(solution) {
+        readGLPKSolution(this, solution);
+    }
+
+    /**
+     * Solves the model using the provided solver. HiGHS.js or glpk.js can be used. 
+     * The solution can be accessed from the variables' `value` properties and the constraints' `primal` and `dual` properties.
+     * @param {Object} solver - The solver instance to use for solving the model, either HiGHS.js or glpk.js.
+     * @param {Object} [options={}] - Options to pass to the solver's solve method (refer to their respective documentation).
+     */
+    solve(solver, options = {}) {
+        if (Object.hasOwn(solver, 'GLP_OPT')) {
+            this.solution = solver.solve(this.toGLPKFormat(), options);
+            this.readGLPKSolution(this.solution);
+        } else if (Object.hasOwn(solver, '_Highs_run')) {
+            this.solution = solver.solve(this.toLPFormat(), options);
+            this.readHighsSolution(this.solution);
+        }
     }
 }
