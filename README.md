@@ -27,21 +27,97 @@ In the browser:
 
 ## Usage
 
+### Setup
+
+Setup in Node.js:
+
 ```javascript
 const LPModel = require('lp-model');
-const m = new LPModel.Model();
-const x = m.addVar({ lb: 0, vtype: "BINARY" });
-const y = m.addVar({ lb: 0, name: "y" });
-m.setObjective([[4, x], [5, y]], "MAXIMIZE");
-m.addConstr([x, [2, y], 3], "<=", 8);
-m.addConstr([[3, x], [4, y]], ">=", [12, [-1, x]]);
-console.log(m.toLPFormat());
+// optionally load the solvers
+async function main() {
+    const model = new LPModel.Model();
+    // ...
+    const highs = await require("highs")();
+    model.solve(highs);
+    // or
+    const glpk = await require("glpk.js")();
+    model.solve(glpk);
+}
+main();
+```
 
-const highs = await require("highs")();
-m.solve(highs);
-console.log(x.value, y.value);
+Setup in the browser for high-js:
+```html
+<script src="https://cdn.jsdelivr.net/npm/lp-model@latest/dist/lp-model.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highs/build/highs.js"></script>
+<script>
+    async function main() {
+        const model = new LPModel.Model();
+        // ...
+        const highs = await Module();
+        model.solve(highs);
+    }
+    main();
+</script>
+```
 
-const glpk = await require("glpk.js")();
-m.solve(glpk);
-console.log(x.value, y.value);
+Setup in the browser for glpk.js, in a module:
+```html
+<script type="module">
+    import { Model } from "https://cdn.jsdelivr.net/npm/lp-model@latest/dist/lp-model.es.min.js";
+    import GLPK from "https://cdn.jsdelivr.net/npm/glpk.js";
+
+    async function main() {
+        const model = new Model();
+        // ...
+        const glpk = await GLPK();
+        model.solve(glpk);
+    }
+    main();
+</script>
+```
+
+### Example model
+
+```javascript
+const x = model.addVar({ lb: 0, vtype: "BINARY" });
+const y = model.addVar({ lb: 0, name: "y" });
+
+model.setObjective([[4, x], [5, y]], "MAXIMIZE"); // 4x + 5y
+model.addConstr([x, [2, y], 3], "<=", 8); // x + 2y + 3 <= 8
+model.addConstr([[3, x], [4, y]], ">=", [12, [-1, x]]); // 3x + 4y >= 12 - x
+console.log(model.toLPFormat();)
+
+await model.solve(highs);
+console.log(`x = ${x.value}\n y = ${y.value}`);
+```
+
+### Example: knapsack problem
+
+```javascript
+const problem = {
+    capacity: 15,
+    items: [
+        { name: "A", weight: 3, value: 4 },
+        { name: "B", weight: 4, value: 5 },
+        { name: "C", weight: 5, value: 8 },
+        { name: "D", weight: 8, value: 10 }
+    ]
+};
+
+const itemNames = problem.items.map(item => item.name);
+
+const included = model.addVars(itemNames, { vtype: "BINARY" });
+// included : dict with keys "A", "B", "C", "D", each representing a binary variable
+
+model.addConstr(problem.items.map((item, i) => [item.weight, included[item.name]]), "<=", problem.capacity);
+// sum of weights of included items <= capacity
+// equivalent to: 3*included[A] + 4*included[B] + 5*included[C] + 8*included[D] <= 15
+
+model.setObjective(problem.items.map((item, i) => [item.value, included[item.name]]), "MAXIMIZE");
+// maximize sum of values of included items
+
+await model.solve(highs);
+console.log(`Objective value: ${model.objVal}`);
+console.log(`Included items: ${itemNames.filter(name => included[name].value > 0.5)}`);
 ```
