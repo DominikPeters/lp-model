@@ -79,6 +79,9 @@ export class Model {
     addVar({ lb, ub, vtype, name } = {}) {
         if (name === null || name === undefined) {
             name = `Var${this.varCount++}`; // Assign an internal name if none provided
+            while (this.variables.has(name)) {
+                name = `Var${this.varCount++}`; // Ensure unique name
+            }
         } else if (this.variables.has(name)) {
             throw new Error(`Variable name '${name}' has already been used.`);
         }
