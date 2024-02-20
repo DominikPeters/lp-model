@@ -2,7 +2,7 @@ import terser from '@rollup/plugin-terser';
 
 export default [
 	{
-		input: 'model.js',
+		input: 'src/model.js',
 		output: [
 			{
 				name: 'LPModel',
