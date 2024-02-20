@@ -12,6 +12,10 @@
     "type": "git",
     "url": "git+https://github.com/DominikPeters/lp-model.git"
   },
+  "main": "dist/lp-model.js",
+  "unpkg": "dist/lp-model.js",
+  "jsdelivr": "dist/lp-model.js",
+  "browser": "dist/lp-model.js",
   "keywords": [
     "ilp",
     "mip",

@@ -8,7 +8,8 @@ export default [
 				name: 'LPModel',
 				file: 'dist/lp-model.min.js',
 				format: 'umd',
-				plugins: [terser()] // minify the output
+				plugins: [terser()], // minify the output
+				sourcemap: true
 			},
 			{
 				name: 'LPModel',
