@@ -1,3 +1,8 @@
+/**
+ * A module for specifying LPs and ILPs using a convenient syntax, and solving them with various solvers.
+ * @module lp-model
+ */
+
 import { toGLPKFormat, readGLPKSolution } from './glpk-js-bridge.js';
 import { toJSLPSolverFormat, readJSLPSolverSolution } from './jsLPSolver-bridge.js';
 import { readHighsSolution } from './highs-js-bridge.js';
