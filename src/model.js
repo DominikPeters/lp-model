@@ -1,4 +1,5 @@
 import { toGLPKFormat, readGLPKSolution } from './glpk-js-bridge.js';
+import { toJSLPSolverFormat, readJSLPSolverSolution } from './jsLPSolver-bridge.js';
 import { readHighsSolution } from './highs-js-bridge.js';
 import { toLPFormat } from './write-lp-format.js';
 
@@ -147,6 +148,11 @@ export class Model {
         lhs = this.parseExpression(lhs);
         rhs = typeof rhs === 'number' ? [rhs] : this.parseExpression(rhs);
 
+        if (comparison === "==") comparison = "="; // Convert to standard comparison operator
+        if (!["<=", "=", ">="].includes(comparison)) {
+            throw new Error(`Invalid comparison operator: ${comparison}. Must be one of "<=", "=", or ">=".`);
+        }
+
         // Combine LHS and negated RHS
         const combinedLhs = lhs.concat(rhs.map(term => {
             if (Array.isArray(term)) {
@@ -287,16 +293,47 @@ export class Model {
     }
 
     /**
+     * Converts the model to the JSON format for use with the jsLPSolver solver.
+     * @returns {Object} The model represented in the JSON format for jsLPSolver.
+     * @see {@link https://www.npmjs.com/package/jsLPSolver}
+     */
+    toJSLPSolverFormat(options) {
+        return toJSLPSolverFormat(this, options);
+    }
+
+    /**
+     * Reads and applies the solution from the jsLPSolver solver to the model's variables and constraints.
+     * @param {Object} solution - The solution object returned by the jsLPSolver solver.
+     * @see {@link https://www.npmjs.com/package/jsLPSolver}
+     */
+    readJSLPSolverSolution(solution) {
+        readJSLPSolverSolution(this, solution);
+    }
+
+    /**
      * Solves the model using the provided solver. HiGHS.js or glpk.js can be used. 
      * The solution can be accessed from the variables' `value` properties and the constraints' `primal` and `dual` properties.
      * @param {Object} solver - The solver instance to use for solving the model, either HiGHS.js or glpk.js.
      * @param {Object} [options={}] - Options to pass to the solver's solve method (refer to their respective documentation: https://ergo-code.github.io/HiGHS/dev/options/definitions/, https://www.npmjs.com/package/glpk.js).
      */
     async solve(solver, options = {}) {
-        if (Object.hasOwn(solver, 'GLP_OPT')) {
+        // clear previous solution
+        this.solution = null;
+        this.variables.forEach(variable => variable.value = null);
+        this.constraints.forEach(constraint => {
+            constraint.primal = null;
+            constraint.dual = null;
+        });
+        this.ObjVal = null;
+
+        // run solver
+        if (Object.hasOwn(solver, 'branchAndCut') && Object.hasOwn(solver, 'lastSolvedModel')) { // jsLPSolver
+            this.solution = solver.Solve(this.toJSLPSolverFormat(options));
+            this.readJSLPSolverSolution(this.solution);
+        } else if (Object.hasOwn(solver, 'GLP_OPT')) { // glpk.js
             this.solution = await solver.solve(this.toGLPKFormat(), options);
             this.readGLPKSolution(this.solution);
-        } else if (Object.hasOwn(solver, '_Highs_run')) {
+        } else if (Object.hasOwn(solver, '_Highs_run')) { // highs-js
             this.solution = solver.solve(this.toLPFormat(), options);
             this.readHighsSolution(this.solution);
         }
