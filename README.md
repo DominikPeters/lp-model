@@ -94,8 +94,8 @@ Setup in the browser for glpk.js (needs to be loaded from a module):
 ### Example model
 
 ```javascript
-const x = model.addVar({ lb: 0, vtype: "BINARY" });
-const y = model.addVar({ lb: 0, name: "y" });
+const x = model.addVar({ vtype: "BINARY" }); // equivalent to model.addVar({ lb: 0, ub: 1, vtype: "INTEGER" })
+const y = model.addVar({ lb: 0, name: "y" }); // default vtype is "CONTINUOUS"
 
 model.setObjective([[4, x], [5, y]], "MAXIMIZE"); // 4x + 5y
 model.addConstr([x, [2, y], 3], "<=", 8); // x + 2y + 3 <= 8
@@ -103,6 +103,8 @@ model.addConstr([[3, x], [4, y]], ">=", [12, [-1, x]]); // 3x + 4y >= 12 - x
 console.log(model.toLPFormat();)
 
 await model.solve(highs);
+console.log(`Solver finished with status: ${model.status}`);
+console.log(`Objective value: ${model.ObjVal}`);
 console.log(`x = ${x.value}\n y = ${y.value}`);
 ```
 
@@ -165,6 +167,28 @@ console.log(`Included items: ${itemNames.filter(name => included[name].value > 0
 ```
 
 ## API
+
+<a name="new_module_lp-model.Model_new"></a>
+
+### new Model()
+Represents an LP or ILP model.
+
+<a name="module_lp-model.Model+solution"></a>
+
+### property model.solution : <code>Object</code> \| <code>null</code>
+The solution of the optimization problem, provided directly by the solver, see the solver's documentation for details.
+
+<a name="module_lp-model.Model+status"></a>
+
+### property model.status : <code>String</code>
+The status of the optimization problem, e.g., "Optimal", "Infeasible", "Unbounded", etc.
+
+<a name="module_lp-model.Model+ObjVal"></a>
+
+### property  model.ObjVal : <code>number</code> \| <code>null</code>
+The value of the objective function in the optimal solution.
+
+<a name="module_lp-model.Model+addVar"></a>
 
 ### model.addVar(options) ⇒ <code>Var</code>
 Adds a variable to the model.

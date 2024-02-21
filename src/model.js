@@ -65,11 +65,33 @@ export class Model {
     /**
      * Creates an instance of a model.
      */
+    /**
+     * Represents a mathematical optimization model.
+     * @constructor
+     */
     constructor() {
         this.variables = new Map();
         this.constraints = [];
         this.objective = { expression: [0], sense: "MAXIMIZE" };
-        this.varCount = 0; // Counter for variable naming
+        this.varCount = 0;
+
+        /**
+         * The solution of the optimization problem, provided directly by the solver.
+         * @type {Object | null}
+         */
+        this.solution = null;
+
+        /**
+         * The status of the optimization problem, e.g., "Optimal", "Infeasible", "Unbounded", etc.
+         * @type {String}
+         */
+        this.status = null;
+
+        /**
+         * The value of the objective function in the optimal solution.
+         * @type {number | null}
+         */
+        this.ObjVal = null;
     }
 
     /**
