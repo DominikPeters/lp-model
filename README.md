@@ -108,7 +108,29 @@ console.log(`x = ${x.value}\n y = ${y.value}`);
 
 Check out the [demo page](https://dominikpeters.github.io/lp-model/) to see your browser solve this program.
 
-### Example: knapsack problem
+### Syntax for linear expressions and constraints
+
+The general syntax for `model.addConstr` can be broken down as follows:
+
+```javascript
+model.addConstr(expression, operator, rhs);
+```
+
+where:
+* `expression`: This is the left-hand side (LHS) of the constraint, which is typically a linear combination of decision variables and their coefficients. The expression is specified as an array of terms, where each term is either 
+    - a two-element array `[coefficient, variable]`. For example, `[2, y]` represents $2y$.
+    - a variable `var`. This is equivalent to `[1, var]`.
+    - a single number (for example `3`), which is a constant term.
+
+    Examples: `[0]` is a constant expression; `[[1, x], [2, y]]` represents $x + 2y$ and can also be written as `[x, [2, y]]`; `[x, [2, x], x]` represents $x + 2x + x$ which equals $4x$ and is thus equivalent to `[4, x]`.
+* `operator`: This is a string that specifies the relational operator for the constraint which can be `"<="` for less than or equal to, `">="` for greater than or equal to, and `"="` for equality (`"=="` is also accepted). This defines the relationship between the LHS expression and the RHS value.
+* `rhs` : This stands for the right-hand side of the constraint, which is a constant value (for example `8`) or an expression in the same format as the LHS expression.
+
+For setting the objective function, use `model.setObjective(expression, sense)`, where the same syntax for an expression is used, and the sense of optimization is specified as a string `"MAXIMIZE"` or `"MINIMIZE"`.
+
+### Example 2: knapsack problem
+
+Here is how to model the knapsack problem (select a bundle of items of highest total value subject to a capacity constraint) using binary variables.
 
 ```javascript
 const problem = {
@@ -147,7 +169,6 @@ console.log(`Included items: ${itemNames.filter(name => included[name].value > 0
 ### model.addVar(options) ⇒ <code>Var</code>
 Adds a variable to the model.
 
-**Kind**: instance method of [<code>Model</code>](#module_lp-model.Model)  
 **Returns**: <code>Var</code> - The created variable instance.  
 
 
