@@ -175,17 +175,17 @@ Represents an LP or ILP model.
 
 <a name="module_lp-model.Model+solution"></a>
 
-### property model.solution : <code>Object</code> \| <code>null</code>
+### [property] model.solution : <code>Object</code> \| <code>null</code>
 The solution of the optimization problem, provided directly by the solver, see the solver's documentation for details.
 
 <a name="module_lp-model.Model+status"></a>
 
-### property model.status : <code>String</code>
+### [property] model.status : <code>String</code>
 The status of the optimization problem, e.g., "Optimal", "Infeasible", "Unbounded", etc.
 
 <a name="module_lp-model.Model+ObjVal"></a>
 
-### property  model.ObjVal : <code>number</code> \| <code>null</code>
+### [property]  model.ObjVal : <code>number</code> \| <code>null</code>
 The value of the objective function in the optimal solution.
 
 <a name="module_lp-model.Model+addVar"></a>
