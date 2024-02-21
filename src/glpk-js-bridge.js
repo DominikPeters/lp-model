@@ -76,7 +76,7 @@ export function toGLPKFormat(model) {
 
 export function readGLPKSolution(model, solution) {
     model.status = solutionNames[solution.result.status];
-    model.ObjVal = solution.result.z;
+    model.ObjVal = solution.result.z + model.objective.expression[0]; // Add constant term to objective value
 
     // Update variable values
     Object.entries(solution.result.vars).forEach(([varName, varValue]) => {
