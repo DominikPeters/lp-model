@@ -42,21 +42,21 @@ async function testInfeasible() {
     console.log(m.status);
 }
 
-// async function testQuadratic() {
-//     const LPModel = require('../dist/lp-model.js');
-//     const m = new LPModel.Model();
-//     const x = m.addVar({ name: "x" });
-//     const y = m.addVar({ name: "y" });
-//     m.setObjective([[1, x, x]], "MINIMIZE");
-//     m.addConstr([x, y], ">=", 1);
+async function testQuadratic() {
+    const LPModel = require('../dist/lp-model.js');
+    const m = new LPModel.Model();
+    const x = m.addVar({ name: "x" });
+    m.setObjective([[1, x, x]], "MINIMIZE");
+    m.addConstr([x], ">=", 10);
+    m.addConstr([x], "<=", 20);
 
-//     console.log(m.toLPFormat());
+    console.log(m.toLPFormat());
 
-//     const highs = await require("highs")();
-//     m.solve(highs);
-//     console.log(x.value, y.value);
-// }
-// testQuadratic();
+    const highs = await require("highs")();
+    m.solve(highs);
+    console.log(x.value, x.value === 10);
+    console.log(m.ObjVal, m.ObjVal === 100);
+}
 
 async function testObjectiveConstantTerm() {
     const LPModel = require('../dist/lp-model.js');
@@ -82,5 +82,6 @@ async function allTests() {
     await test1();
     await testInfeasible();
     await testObjectiveConstantTerm();
+    await testQuadratic();
 }
 allTests();

@@ -7,7 +7,7 @@ export function toLPFormat(model) {
                 if (term.length === 2) {
                     return `${term[0]} ${term[1].name}`;
                 } else if (term.length === 3) {
-                    return `[${term[0]} ${term[1].name} * ${term[2].name}]`;
+                    return `[ ${term[0]*2} ${term[1].name} * ${term[2].name} ]/2`;
                 }
             } else {
                 return `${term}`;

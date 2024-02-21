@@ -166,6 +166,18 @@ console.log(`Objective value: ${model.ObjVal}`); // 17
 console.log(`Included items: ${itemNames.filter(name => included[name].value > 0.5)}`); // A,B,D
 ```
 
+### Example 3: quadratic objective function
+
+The HiGHS solver supports (convex) quadratic objective functions. Quadratic terms are specified as length-3 arrays, with coefficient followed by the two variables that are being multiplied (which may be the same variable in case of a squared term). Here is an example of how to model a quadratic objective function.
+
+```javascript
+const x = model.addVar({ name: "x" });
+model.addConstr([x], ">=", 10);
+model.setObjective([[3, x, x]], "MINIMIZE"); // minimize 3 x^2
+await model.solve(highs);
+console.log(`Objective value: ${model.ObjVal}, with x = ${x.value}`); // 300, with x = 10
+```
+
 ## API
 
 <a name="new_module_lp-model.Model_new"></a>

@@ -325,6 +325,9 @@ export class Model {
      * @see {@link https://www.npmjs.com/package/jsLPSolver}
      */
     toJSLPSolverFormat(options) {
+        if (this.isQuadratic()) {
+            throw new Error("jsLPSolver does not support quadratic models.");
+        }
         return toJSLPSolverFormat(this, options);
     }
 
