@@ -5,7 +5,8 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "test": "npm run build && node test/test.js"
+    "test": "npm run build && mocha",
+    "parser": "peggy -o src/parse-lp-format.js --format es src/parse-lp-format.peggy"
   },
   "repository": {
     "type": "git",
@@ -32,9 +33,12 @@
   "homepage": "https://github.com/DominikPeters/lp-model",
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
+    "chai": "^5.1.0",
     "glpk.js": "^4.0.2",
     "highs": "^1.0.1",
     "javascript-lp-solver": "^0.4.24",
+    "mocha": "^10.3.0",
+    "peggy": "^4.0.0",
     "rollup": "^4.12.0"
   },
   "files": [

@@ -6,7 +6,7 @@
 import { toGLPKFormat, readGLPKSolution } from './glpk-js-bridge.js';
 import { toJSLPSolverFormat, readJSLPSolverSolution } from './jsLPSolver-bridge.js';
 import { readHighsSolution } from './highs-js-bridge.js';
-import { toLPFormat } from './write-lp-format.js';
+import { fromLPFormat, toLPFormat } from './lp-format.js';
 
 /**
  * Represents a variable in a linear programming model.
@@ -91,6 +91,16 @@ export class Model {
          * The value of the objective function in the optimal solution.
          * @type {number | null}
          */
+        this.ObjVal = null;
+    }
+
+    clear() {
+        this.variables = new Map();
+        this.constraints = [];
+        this.objective = { expression: [0], sense: "MAXIMIZE" };
+        this.varCount = 0;
+        this.solution = null;
+        this.status = null;
         this.ObjVal = null;
     }
 
@@ -270,12 +280,21 @@ export class Model {
     }
 
     /**
-     * Converts the model to CPLEX LP format string.
+     * Converts the model to CPLEX LP file format, provided as a string.
      * @returns {string} The model represented in LP format.
      * @see {@link https://web.mit.edu/lpsolve/doc/CPLEX-format.htm}
      */
     toLPFormat() {
         return toLPFormat(this);
+    }
+
+    /**
+     * Clears the model, then adds variables and constraints taken from a string formatted in the CPLEX LP file format.
+     * @param {string} lpString - The LP file as a string.
+     * @see {@link https://web.mit.edu/lpsolve/doc/CPLEX-format.htm}
+     */
+    readLPFormat(lpString) {
+        return fromLPFormat(this, lpString);
     }
 
     /**

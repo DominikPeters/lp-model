@@ -6,7 +6,7 @@
 
 JavaScript package for modelling (Integer) Linear Programs
 
-This is a lightweight JS package for specifying LPs and ILPs using a convenient syntax. The constructed model can be exported to the `.lp` [CPLEX LP format](https://web.mit.edu/lpsolve/doc/CPLEX-format.htm), and solved using 
+This is a lightweight JS package for specifying LPs and ILPs using a convenient syntax. Models can be read from and exported to the `.lp` [CPLEX LP format](https://web.mit.edu/lpsolve/doc/CPLEX-format.htm), and solved using 
 * [highs-js](https://github.com/lovasoa/highs-js) (WebAssembly wrapper for the [HiGHS solver](https://github.com/ERGO-Code/HiGHS), a high-performance LP/ILP solver),
 * [glpk.js](https://github.com/jvail/glpk.js) (WebAssembly wrapper for the [GLPK solver](https://www.gnu.org/software/glpk/)), and
 * [jsLPSolver](https://github.com/JWally/jsLPSolver) (a pure JS solver, not as fast as the others, but small bundle size).
@@ -168,7 +168,7 @@ console.log(`Included items: ${itemNames.filter(name => included[name].value > 0
 
 ### Example 3: quadratic objective function
 
-The HiGHS solver supports (convex) quadratic objective functions. Quadratic terms are specified as length-3 arrays, with coefficient followed by the two variables that are being multiplied (which may be the same variable in case of a squared term). Here is an example of how to model a quadratic objective function.
+The HiGHS solver supports (convex) quadratic objective functions (as does the [LP format](https://www.ibm.com/docs/en/icos/22.1.1?topic=representation-quadratic-terms-in-lp-file-format) output function). Quadratic terms are specified as length-3 arrays, with coefficient followed by the two variables that are being multiplied (which may be the same variable in case of a squared term). Here is an example of how to model a quadratic objective function.
 
 ```javascript
 const x = model.addVar({ name: "x" });
@@ -176,6 +176,24 @@ model.addConstr([x], ">=", 10);
 model.setObjective([[3, x, x]], "MINIMIZE"); // minimize 3 x^2
 await model.solve(highs);
 console.log(`Objective value: ${model.ObjVal}, with x = ${x.value}`); // 300, with x = 10
+```
+
+### Example 4: Read model from .lp file
+```javascript
+const lpFile = `Maximize
+obj: 1 x1 + 2 x2 + 3 x3 + 1 x4
+Subject To
+ c1: -1 x1 + 1 x2 + 1 x3 + 10 x4 <= 20
+ c2: 1 x1 - 3 x2 + 1 x3 <= 30
+ c3: 1 x2 - 3.5 x4 = 0
+Bounds
+ 0 <= x1 <= 40
+ 2 <= x4 <= 3
+General
+ x4
+End`;
+model.readLPFormat(lpFile);
+await model.solve(highs);
 ```
 
 ## API
@@ -263,6 +281,15 @@ Converts the model to CPLEX LP format string.
 
 **Returns**: <code>string</code> - The model represented in LP format.  
 **See**: [https://web.mit.edu/lpsolve/doc/CPLEX-format.htm](https://web.mit.edu/lpsolve/doc/CPLEX-format.htm)  
+
+### model.readLPFormat(lpString)
+Clears the model, then adds variables and constraints taken from a string formatted in the CPLEX LP file format.
+
+**See**: [https://web.mit.edu/lpsolve/doc/CPLEX-format.htm](https://web.mit.edu/lpsolve/doc/CPLEX-format.htm)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| lpString | <code>string</code> | The LP file as a string. |
 
 <a name="module_lp-model.Model+solve"></a>
 
