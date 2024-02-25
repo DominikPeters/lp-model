@@ -24,7 +24,7 @@ Constraints
   }
 
 Constraint
-  = name:(VariableName ":")? _ expr:Expression _ sense:ConstraintSense _ value:Number _ {
+  = name:(VariableName ":")? _ expr:Expression _ sense:ConstraintSense _ value:SignedNumber _ {
     return {
       name: name ? name[0] : null,
       expression: expr,
@@ -61,14 +61,17 @@ InfinityNumber "infinity number"
     }
   / SignedNumber
 
+BinaryHeader = "Binary"i / "Binaries"i / "Bin"i
+GeneralHeader = "Generals"i / "General"i / "Gen"i
+
 General
-  = "General"i _ vars:VariableName+ {
-    return vars;
+  = GeneralHeader _ vars:(VariableName _)+ {
+	  return vars.map(v => v[0]); 
   }
 
 Binary
-  = "Binary"i _ vars:VariableName+ {
-    return vars;
+  = BinaryHeader _ vars:(VariableName _)+ {
+	  return vars.map(v => v[0]); 
   }
 
 Expression
@@ -103,9 +106,8 @@ Term
       return { coefficient: number, variable: null };
     }
 
-
 VariableName "variable name"
-  = [a-zA-Z!\"#$%&'()*+,./;?@_`'{|}~][a-zA-Z0-9!\"#$%&'()*+,./;?@_`'{|}~]* {
+  = !BinaryHeader !GeneralHeader !"End"i [a-zA-Z!\"#$%&'()*+,./;?@_`'{|}~][a-zA-Z0-9!\"#$%&'()*+,./;?@_`'{|}~]* {
     return text();
   }
   
@@ -115,8 +117,8 @@ SignedNumber "signed number"
   }
 
 Number "number"
-  = integer:[0-9]+ fractional:("." [0-9]+)? {
-    return parseFloat(integer.join("") + (fractional ? fractional[0] + fractional[1].join("") : ""));
+  = number:[0-9]+ ("." [0-9]+)? ("e"i [+-]? [0-9]+)? {
+    return parseFloat(text());
   }
 
 _ "whitespace or comment"
