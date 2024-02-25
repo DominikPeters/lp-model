@@ -32,8 +32,11 @@ export class Var {
         if (typeof ub !== "number" && ub !== "+infinity") {
             throw new Error(`Invalid upper bound: ${ub}. Must be a number or "+infinity".`);
         }
+        if (typeof lb === "number" && typeof ub === "number" && lb > ub) {
+            throw new Error("Variable lower bound must be less than or equal to upper bound.");
+        }
         this.lb = lb;
-        this.ub = ub;
+        this.ub = vtype === "BINARY" ? 1 : ub;
         this.vtype = vtype.toUpperCase();
         this.name = name;
     }
