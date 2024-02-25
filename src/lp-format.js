@@ -89,7 +89,12 @@ export function toLPFormat(model) {
     // Bounds
     let boundsString = "Bounds\n";
     model.variables.forEach((varObj, varName) => {
-        if (varObj.lb !== 0 || varObj.ub !== "+infinity") {
+        if (varObj.vtype === "BINARY") {
+            return;
+        }
+        if (varObj.lb === "-infinity" && varObj.ub === "+infinity") {
+            boundsString += ` ${varName} free\n`;
+        } else if (varObj.lb !== 0 || varObj.ub !== "+infinity") {
             boundsString += ` ${varObj.lb === "-infinity" ? "-inf" : varObj.lb} <= ${varName} <= ${varObj.ub === "+infinity" ? "+inf" : varObj.ub}\n`;
         }
     });
