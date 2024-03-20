@@ -152,7 +152,10 @@ const included = model.addVars(itemNames, { vtype: "BINARY" });
 // included[A], included[B], included[C], included[D] are binary variables
 
 // sum of weights of included items <= capacity
-model.addConstr(problem.items.map((item, i) => [item.weight, included[item.name]]), "<=", problem.capacity);
+model.addConstr(
+    problem.items.map(
+        (item, i) => [item.weight, included[item.name]]
+    ), "<=", problem.capacity);
 // equivalent to: 3*included[A] + 4*included[B] + 5*included[C] + 8*included[D] <= 15
 
 // maximize sum of values of included items
