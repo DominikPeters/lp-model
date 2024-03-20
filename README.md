@@ -100,7 +100,7 @@ const y = model.addVar({ lb: 0, name: "y" }); // default vtype is "CONTINUOUS"
 model.setObjective([[4, x], [5, y]], "MAXIMIZE"); // 4x + 5y
 model.addConstr([x, [2, y], 3], "<=", 8); // x + 2y + 3 <= 8
 model.addConstr([[3, x], [4, y]], ">=", [12, [-1, x]]); // 3x + 4y >= 12 - x
-console.log(model.toLPFormat();)
+console.log(model.toLPFormat());
 
 await model.solve(highs);
 console.log(`Solver finished with status: ${model.status}`);
