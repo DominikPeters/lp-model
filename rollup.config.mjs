@@ -1,8 +1,9 @@
 import terser from '@rollup/plugin-terser';
+import typescript from '@rollup/plugin-typescript';
 
 export default [
 	{
-		input: 'src/model.js',
+		input: 'src/model.ts',
 		output: [
 			{
 				name: 'LPModel',
@@ -21,6 +22,7 @@ export default [
 				file: 'dist/lp-model.es.js',
 				format: 'es'
 			}
-		]
+		],
+		plugins: [typescript()]
 	},
 ];
