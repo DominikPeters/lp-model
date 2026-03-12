@@ -1,34 +1,34 @@
 /* CONSTANTS */
 // taken from https://github.com/jvail/glpk.js/blob/master/src/glpk.js
-const glpk_consts = {};
+const glpk_consts = {
+    /* direction: */
+    GLP_MIN: 1,  /* minimization */
+    GLP_MAX: 2,  /* maximization */
 
-/* direction: */
-glpk_consts.GLP_MIN = 1;  /* minimization */
-glpk_consts.GLP_MAX = 2;  /* maximization */
+    /* type of auxiliary/structural variable: */
+    GLP_FR: 1,  /* free (unbounded) variable */
+    GLP_LO: 2,  /* variable with lower bound */
+    GLP_UP: 3,  /* variable with upper bound */
+    GLP_DB: 4,  /* double-bounded variable */
+    GLP_FX: 5,  /* fixed variable */
 
-/* type of auxiliary/structural variable: */
-glpk_consts.GLP_FR = 1;  /* free (unbounded) variable */
-glpk_consts.GLP_LO = 2;  /* variable with lower bound */
-glpk_consts.GLP_UP = 3;  /* variable with upper bound */
-glpk_consts.GLP_DB = 4;  /* double-bounded variable */
-glpk_consts.GLP_FX = 5;  /* fixed variable */
+    /* message level: */
+    GLP_MSG_OFF: 0,   /* no output */
+    GLP_MSG_ERR: 1,   /* warning and error messages only */
+    GLP_MSG_ON: 2,    /* normal output */
+    GLP_MSG_ALL: 3,   /* full output */
+    GLP_MSG_DBG: 4,   /* debug output */
 
-/* message level: */
-glpk_consts.GLP_MSG_OFF = 0;   /* no output */
-glpk_consts.GLP_MSG_ERR = 1;   /* warning and error messages only */
-glpk_consts.GLP_MSG_ON = 2;    /* normal output */
-glpk_consts.GLP_MSG_ALL = 3;   /* full output */
-glpk_consts.GLP_MSG_DBG = 4;   /* debug output */
+    /* solution status: */
+    GLP_UNDEF: 1,     /* solution is undefined */
+    GLP_FEAS: 2,      /* solution is feasible */
+    GLP_INFEAS: 3,    /* solution is infeasible */
+    GLP_NOFEAS: 4,    /* no feasible solution exists */
+    GLP_OPT: 5,       /* solution is optimal */
+    GLP_UNBND: 6,     /* solution is unbounded */
+};
 
-/* solution status: */
-glpk_consts.GLP_UNDEF = 1;     /* solution is undefined */
-glpk_consts.GLP_FEAS = 2;      /* solution is feasible */
-glpk_consts.GLP_INFEAS = 3;    /* solution is infeasible */
-glpk_consts.GLP_NOFEAS = 4;    /* no feasible solution exists */
-glpk_consts.GLP_OPT = 5;	    /* solution is optimal */
-glpk_consts.GLP_UNBND = 6;     /* solution is unbounded */
-
-const solutionNames = {
+const solutionNames: Record<number, string> = {
     1: "Undefined",
     2: "Feasible",
     3: "Infeasible",
@@ -37,20 +37,22 @@ const solutionNames = {
     6: "Unbounded"
 };
 
-export function toGLPKFormat(model) {
+import { Model } from './model.js';
+
+export function toGLPKFormat(model: Model): any {
     const glpkModel = {
         name: 'LP',
         objective: {
             direction: model.objective.sense.toUpperCase() === "MAXIMIZE" ? glpk_consts.GLP_MAX : glpk_consts.GLP_MIN,
             name: 'obj',
-            vars: model.objective.expression.slice(1).map(term => ({ // Exclude constant term
+            vars: model.objective.expression.slice(1).map((term: any) => ({
                 name: term[1].name,
                 coef: term[0]
             }))
         },
         subjectTo: model.constraints.map((constr, index) => ({
             name: `cons${index + 1}`,
-            vars: constr.lhs.slice(1).map(term => ({ // Exclude constant term
+            vars: constr.lhs.slice(1).map((term: any) => ({
                 name: term[1].name,
                 coef: term[0]
             })),
@@ -74,21 +76,19 @@ export function toGLPKFormat(model) {
     return glpkModel;
 }
 
-export function readGLPKSolution(model, solution) {
+export function readGLPKSolution(model: Model, solution: any): void {
     model.status = solutionNames[solution.result.status];
-    model.ObjVal = solution.result.z + model.objective.expression[0]; // Add constant term to objective value
+    model.ObjVal = solution.result.z + (model.objective.expression[0] as number);
 
-    // Update variable values
-    Object.entries(solution.result.vars).forEach(([varName, varValue]) => {
+    Object.entries(solution.result.vars).forEach(([varName, varValue]: [string, any]) => {
         if (model.variables.has(varName)) {
-            const variable = model.variables.get(varName);
+            const variable = model.variables.get(varName)!;
             variable.value = varValue;
         } else {
             console.warn(`Variable ${varName} from the solution was not found in the model.`);
         }
     });
 
-    // Optionally, update constraint dual values if available (for simplex solutions)
     if (solution.result.dual) {
         model.constraints.forEach((constraint, index) => {
             const dualValue = solution.result.dual[`cons${index + 1}`];
