@@ -1,6 +1,19 @@
 import { parse } from './parse-lp-format.js';
-export function fromLPFormat(model, lpString) {
-    const p = parse(lpString);
+export function fromLPFormat(model, lpString, fileName=".lp file") {
+    // fileName is used for error messages
+    let p;
+    try {
+        p = parse(lpString, { grammarSource: fileName });
+    } catch (e) {
+        if (typeof e.format === "function") {
+          console.log(e.format([
+            { source: fileName, text: lpString },
+          ]));
+          return;
+        } else {
+          throw e;
+        }
+      }
 
     // Clear model
     model.clear();
@@ -87,18 +100,20 @@ export function toLPFormat(model) {
     }
 
     // Bounds
-    let boundsString = "Bounds\n";
+    let boundsEntries = "";
     model.variables.forEach((varObj, varName) => {
         if (varObj.vtype === "BINARY") {
             return;
         }
         if (varObj.lb === "-infinity" && varObj.ub === "+infinity") {
-            boundsString += ` ${varName} free\n`;
+            boundsEntries += ` ${varName} free\n`;
         } else if (varObj.lb !== 0 || varObj.ub !== "+infinity") {
-            boundsString += ` ${varObj.lb === "-infinity" ? "-inf" : varObj.lb} <= ${varName} <= ${varObj.ub === "+infinity" ? "+inf" : varObj.ub}\n`;
+            boundsEntries += ` ${varObj.lb === "-infinity" ? "-inf" : varObj.lb} <= ${varName} <= ${varObj.ub === "+infinity" ? "+inf" : varObj.ub}\n`;
         }
     });
-    lpString += boundsString;
+    if (boundsEntries) {
+        lpString += "Bounds\n" + boundsEntries;
+    }
 
     // Variable Types (General and Binary)
     let generalVars = [];
