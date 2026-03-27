@@ -1,26 +1,25 @@
 import { parse } from './parse-lp-format.js';
-export function fromLPFormat(model, lpString, fileName=".lp file") {
-    // fileName is used for error messages
-    let p;
+import { Model } from './model.js';
+
+export function fromLPFormat(model: Model, lpString: string, fileName: string = ".lp file"): Model | undefined {
+    let p: any;
     try {
         p = parse(lpString, { grammarSource: fileName });
-    } catch (e) {
+    } catch (e: any) {
         if (typeof e.format === "function") {
-          console.log(e.format([
-            { source: fileName, text: lpString },
-          ]));
-          return;
+            console.log(e.format([
+                { source: fileName, text: lpString },
+            ]));
+            return;
         } else {
-          throw e;
+            throw e;
         }
-      }
+    }
 
-    // Clear model
     model.clear();
 
-    // Set up variables with bounds
-    p.bounds.forEach(bound => {
-        const options = { name: bound.variable };
+    p.bounds.forEach((bound: any) => {
+        const options: any = { name: bound.variable };
         if (bound.lower !== undefined) {
             options.lb = bound.lower;
         }
@@ -34,51 +33,48 @@ export function fromLPFormat(model, lpString, fileName=".lp file") {
         model.addVar(options);
     });
 
-    // Mark variables as binary or integer (general)
-    p.binary.forEach(variable => {
+    p.binary.forEach((variable: string) => {
         if (model.variables.has(variable)) {
-            model.variables.get(variable).vtype = 'BINARY';
+            model.variables.get(variable)!.vtype = 'BINARY';
         } else {
             model.addVar({ name: variable, vtype: 'BINARY' });
         }
     });
-    p.general.forEach(variable => {
+
+    p.general.forEach((variable: string) => {
         if (model.variables.has(variable)) {
-            model.variables.get(variable).vtype = 'INTEGER';
+            model.variables.get(variable)!.vtype = 'INTEGER';
         } else {
             model.addVar({ name: variable, vtype: 'INTEGER' });
         }
     });
 
-    // Find undeclared variables in the objective and constraints
-    const allVariables = new Set();
-    p.objective.expression.forEach(term => allVariables.add(term.variable));
-    p.constraints.forEach(constraint => constraint.expression.forEach(term => allVariables.add(term.variable)));
+    const allVariables = new Set<string>();
+    p.objective.expression.forEach((term: any) => allVariables.add(term.variable));
+    p.constraints.forEach((constraint: any) => constraint.expression.forEach((term: any) => allVariables.add(term.variable)));
     allVariables.forEach(variable => { if (!model.variables.has(variable)) model.addVar({ name: variable }); });
 
-    // Add objective
-    const objectiveExpression = p.objective.expression.map(term => [term.coefficient, model.variables.get(term.variable)]);
+    const objectiveExpression = p.objective.expression.map((term: any) => [term.coefficient, model.variables.get(term.variable)]);
     model.setObjective(objectiveExpression, p.objective.type === 'max' ? 'MAXIMIZE' : 'MINIMIZE');
 
-    // Add constraints
-    p.constraints.forEach(constraint => {
-        const lhsExpression = constraint.expression.map(term => [term.coefficient, model.variables.get(term.variable)]);
+    p.constraints.forEach((constraint: any) => {
+        const lhsExpression = constraint.expression.map((term: any) => [term.coefficient, model.variables.get(term.variable)]);
         model.addConstr(lhsExpression, constraint.sense, constraint.value);
     });
 
     return model;
 }
 
-export function toLPFormat(model) {
+export function toLPFormat(model: Model): string {
     let lpString = "";
 
-    function expressionToString(expression) {
+    function expressionToString(expression: any[]): string {
         return expression.map(term => {
             if (Array.isArray(term)) {
                 if (term.length === 2) {
                     return `${term[0]} ${term[1].name}`;
                 } else if (term.length === 3) {
-                    return `[ ${term[0]*2} ${term[1].name} * ${term[2].name} ]/2`;
+                    return `[ ${term[0] * 2} ${term[1].name} * ${term[2].name} ]/2`;
                 }
             } else {
                 return `${term}`;
@@ -86,12 +82,10 @@ export function toLPFormat(model) {
         }).join(" + ").replace(/\+ -/g, "- ");
     }
 
-    // Objective Function
     lpString += `${model.objective.sense.toUpperCase() === "MAXIMIZE" ? "Maximize" : "Minimize"}\n`;
-    const objExpression = model.objective.expression[0] === 0 ? model.objective.expression.slice(1) : model.objective.expression; // Remove constant term if zero
+    const objExpression = (model.objective.expression[0] as number) === 0 ? model.objective.expression.slice(1) : model.objective.expression;
     lpString += `obj: ${expressionToString(objExpression)}\n`;
 
-    // Constraints
     if (model.constraints.length > 0) {
         lpString += "Subject To\n";
         model.constraints.forEach((constr, index) => {
@@ -99,7 +93,6 @@ export function toLPFormat(model) {
         });
     }
 
-    // Bounds
     let boundsEntries = "";
     model.variables.forEach((varObj, varName) => {
         if (varObj.vtype === "BINARY") {
@@ -115,9 +108,8 @@ export function toLPFormat(model) {
         lpString += "Bounds\n" + boundsEntries;
     }
 
-    // Variable Types (General and Binary)
-    let generalVars = [];
-    let binaryVars = [];
+    const generalVars: string[] = [];
+    const binaryVars: string[] = [];
 
     for (const [varName, varObj] of model.variables) {
         if (varObj.vtype === "INTEGER") {
@@ -136,7 +128,6 @@ export function toLPFormat(model) {
     }
     lpString += typesString;
 
-    // End
     lpString += "End\n";
 
     return lpString;
