@@ -60,7 +60,7 @@ Setup in the browser for high-js and jsLPSolver:
 ```html
 <script src="https://cdn.jsdelivr.net/npm/lp-model@latest/dist/lp-model.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highs/build/highs.js"></script>
-<script src="https://unpkg.com/javascript-lp-solver/prod/solver.js"></script>
+<script src="https://unpkg.com/javascript-lp-solver@0.4.24/prod/solver.js"></script>
 <script>
     async function main() {
         const model = new LPModel.Model();
