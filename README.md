@@ -79,7 +79,7 @@ Setup in the browser for glpk.js (needs to be loaded from a module):
 ```html
 <script type="module">
     import { Model } from "https://cdn.jsdelivr.net/npm/lp-model@latest/dist/lp-model.es.min.js";
-    import GLPK from "https://cdn.jsdelivr.net/npm/glpk.js";
+    import GLPK from "https://cdn.jsdelivr.net/npm/glpk.js@4.0.2/dist/index.js";
 
     async function main() {
         const model = new Model();
@@ -304,4 +304,3 @@ The solution can be accessed from the variables' `value` properties and the cons
 | --- | --- | --- | --- |
 | solver | <code>Object</code> |  | The solver instance to use for solving the model, either from highs-js, glpk.js, or jsLPSolver. |
 | [options] | <code>Object</code> | <code>{}</code> | Options to pass to the solver's solve method (refer to their respective documentation: https://ergo-code.github.io/HiGHS/dev/options/definitions/, https://www.npmjs.com/package/glpk.js, https://github.com/JWally/jsLPSolver?tab=readme-ov-file#options). |
-
